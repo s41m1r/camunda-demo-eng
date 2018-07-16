@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:camunda="http://camunda.org/schema/1.0/dmn" id="definitions_0pqqtec" name="definitions" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="ascertainPrepayment" name="Ascertain prepayment necessity">
+    <decisionTable id="decisionTable">
+      <input id="input1" label="Contract customer" camunda:inputVariable="">
+        <inputExpression id="inputExpression1" typeRef="boolean">        <text>contractCustomer</text>
+</inputExpression>
+      </input>
+      <input id="InputClause_091zm6u" label="Customer category" camunda:inputVariable="">
+        <inputExpression id="LiteralExpression_0ob6gf5" typeRef="string">        <text>customerCategory</text>
+</inputExpression>
+      </input>
+      <input id="InputClause_1rijjrg" label="Overdue notice open" camunda:inputVariable="">
+        <inputExpression id="LiteralExpression_034hvu5" typeRef="boolean">        <text>overdueNoticeOpen</text>
+</inputExpression>
+      </input>
+      <output id="output1" label="Prepayment required" name="prepaymentRequired" typeRef="boolean" />
+      <rule id="row-973553786-1">
+        <description>Contract customers without overdue reminder status pay with next invoice.</description>
+        <inputEntry id="UnaryTests_14h3rzt">        <text>true</text>
+</inputEntry>
+        <inputEntry id="UnaryTests_0uhtr9l">        <text></text>
+</inputEntry>
+        <inputEntry id="UnaryTests_0tx7ucc">        <text>false</text>
+</inputEntry>
+        <outputEntry id="LiteralExpression_1b48xj9">        <text>false</text>
+</outputEntry>
+      </rule>
+      <rule id="row-973553786-2">
+        <description>Contract customers with value A pay with next invoice.</description>
+        <inputEntry id="UnaryTests_1a5q27l">        <text>true</text>
+</inputEntry>
+        <inputEntry id="UnaryTests_0190sds">        <text><![CDATA["A"]]></text>
+</inputEntry>
+        <inputEntry id="UnaryTests_0d4u1bl">        <text>true</text>
+</inputEntry>
+        <outputEntry id="LiteralExpression_1ftgwoc">        <text>false</text>
+</outputEntry>
+      </rule>
+      <rule id="row-973553786-3">
+        <description>Contract customers with value B and overdue reminder status must pay in advance.</description>
+        <inputEntry id="UnaryTests_0jo36te">        <text>true</text>
+</inputEntry>
+        <inputEntry id="UnaryTests_17xxe97">        <text><![CDATA["B"]]></text>
+</inputEntry>
+        <inputEntry id="UnaryTests_0py4coc">        <text>true</text>
+</inputEntry>
+        <outputEntry id="LiteralExpression_1b0ccy6">        <text>true</text>
+</outputEntry>
+      </rule>
+      <rule id="row-973553786-4">
+        <description>Prepaid customers always pay in advance.</description>
+        <inputEntry id="UnaryTests_16gcjs2">        <text>false</text>
+</inputEntry>
+        <inputEntry id="UnaryTests_1xrryfo">        <text></text>
+</inputEntry>
+        <inputEntry id="UnaryTests_0hp36yc">        <text></text>
+</inputEntry>
+        <outputEntry id="LiteralExpression_1r5o56f">        <text>true</text>
+</outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

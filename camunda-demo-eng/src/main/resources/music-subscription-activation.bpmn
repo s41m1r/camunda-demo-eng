@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="1.6.0">
+  <bpmn:collaboration id="Collaboration_0bzgtl5">
+    <bpmn:participant id="Participant_0gv1dn3" name="Customer" />
+    <bpmn:participant id="Participant_139vz6w" name="Digital music streaming company" processRef="music-subscription-activation" />
+    <bpmn:messageFlow id="MessageFlow_1g5vl4b" sourceRef="Participant_0gv1dn3" targetRef="music-subscription-requested" />
+    <bpmn:messageFlow id="MessageFlow_1nmvwmg" sourceRef="Task_1abqvvf" targetRef="Participant_0gv1dn3" />
+    <bpmn:messageFlow id="MessageFlow_1ik2fhk" sourceRef="Participant_0gv1dn3" targetRef="provide-payment-data" />
+    <bpmn:messageFlow id="MessageFlow_1ntts8v" sourceRef="SendTask_029u5xf" targetRef="Participant_0gv1dn3" />
+  </bpmn:collaboration>
+  <bpmn:process id="music-subscription-activation" name="Music subscription activation" isExecutable="true">
+    <bpmn:sequenceFlow id="SequenceFlow_0plsyem" sourceRef="music-subscription-requested" targetRef="load-customer-data" />
+    <bpmn:sequenceFlow id="SequenceFlow_1ehubc1" sourceRef="load-customer-data" targetRef="Task_1ek9w20" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0c2rb9i" name="Prepayment required?">
+      <bpmn:incoming>SequenceFlow_1gcg0ev</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0cnxkmo</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1sgle8r</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1gcg0ev" sourceRef="Task_1ek9w20" targetRef="ExclusiveGateway_0c2rb9i" />
+    <bpmn:sequenceFlow id="SequenceFlow_0cnxkmo" name="No" sourceRef="ExclusiveGateway_0c2rb9i" targetRef="Task_1x02auz">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">#{not prepaymentRequired}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0augiow" sourceRef="Task_1x02auz" targetRef="Task_1abqvvf" />
+    <bpmn:sequenceFlow id="SequenceFlow_1sgle8r" name="yes" sourceRef="ExclusiveGateway_0c2rb9i" targetRef="collect-prepayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">#{prepaymentRequired}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_18lpv4q" sourceRef="provide-payment-data" targetRef="collect-prepayment" />
+    <bpmn:sequenceFlow id="SequenceFlow_1lmu06n" sourceRef="BoundaryEvent_04hmzyq" targetRef="EndEvent_1cez2nm" />
+    <bpmn:startEvent id="music-subscription-requested" name="Music subscription requested">
+      <bpmn:outgoing>SequenceFlow_0plsyem</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_05lvde5" />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="load-customer-data" name="Load Customer Data" camunda:class="at.ac.wu.ai.camunda_demo_eng.MusicSubscriptionActivationDelegate">
+      <bpmn:incoming>SequenceFlow_0plsyem</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1ehubc1</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:businessRuleTask id="Task_1ek9w20" name="Ascertain prepayment necessity" camunda:resultVariable="prepaymentRequired" camunda:decisionRef="ascertainPrepayment" camunda:mapDecisionResult="singleEntry">
+      <bpmn:incoming>SequenceFlow_1ehubc1</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1gcg0ev</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:serviceTask id="collect-prepayment" name="Collect prepayment" camunda:class="at.ac.wu.ai.camunda_demo_eng.MusicSubscriptionActivationDelegate">
+      <bpmn:incoming>SequenceFlow_1sgle8r</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_18lpv4q</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1d4ygja</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1d4ygja" sourceRef="collect-prepayment" targetRef="Task_1x02auz" />
+    <bpmn:sequenceFlow id="SequenceFlow_146of96" sourceRef="BoundaryEvent_039x7ub" targetRef="SendTask_029u5xf" />
+    <bpmn:sequenceFlow id="SequenceFlow_1a8ci3a" sourceRef="SendTask_029u5xf" targetRef="provide-payment-data" />
+    <bpmn:boundaryEvent id="BoundaryEvent_039x7ub" name="Payment &#10;not possible" attachedToRef="collect-prepayment">
+      <bpmn:outgoing>SequenceFlow_146of96</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_1y3nkti" />
+    </bpmn:boundaryEvent>
+    <bpmn:sendTask id="SendTask_029u5xf" name="Notify customer (SMS)" camunda:class="at.ac.wu.ai.camunda_demo_eng.MusicSubscriptionActivationDelegate">
+      <bpmn:incoming>SequenceFlow_146of96</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1a8ci3a</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_04hmzyq" name="1 week&#10;passed" attachedToRef="provide-payment-data">
+      <bpmn:outgoing>SequenceFlow_1lmu06n</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT30M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1jt3t2j" sourceRef="Task_1abqvvf" targetRef="music-subscription-activated" />
+    <bpmn:userTask id="provide-payment-data" name="Provide payment data" camunda:assignee="demo">
+      <bpmn:incoming>SequenceFlow_1a8ci3a</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_18lpv4q</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_1abqvvf" name="Notify customer (SMS)" camunda:class="at.ac.wu.ai.camunda_demo_eng.MusicSubscriptionActivationDelegate">
+      <bpmn:incoming>SequenceFlow_0augiow</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1jt3t2j</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="EndEvent_1cez2nm" name="Music subscription not activated">
+      <bpmn:incoming>SequenceFlow_1lmu06n</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="music-subscription-activated" name="Music subscription activated">
+      <bpmn:incoming>SequenceFlow_1jt3t2j</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_1x02auz" name="Activate music subscription" camunda:class="at.ac.wu.ai.camunda_demo_eng.MusicSubscriptionActivationDelegate">
+      <bpmn:incoming>SequenceFlow_1d4ygja</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0cnxkmo</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0augiow</bpmn:outgoing>
+    </bpmn:serviceTask>
+  </bpmn:process>
+  <bpmn:message id="Message_05lvde5" name="musicSubscriptionRequested" />
+  <bpmn:error id="Error_1y3nkti" name="Error_1k7q3jt" errorCode="prepayment-not-possible" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_0bzgtl5">
+      <bpmndi:BPMNShape id="Participant_0de9yfm_di" bpmnElement="Participant_0gv1dn3">
+        <dc:Bounds x="222" y="36" width="1139" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_139vz6w_di" bpmnElement="Participant_139vz6w">
+        <dc:Bounds x="222" y="155" width="1140" height="340" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0plsyem_di" bpmnElement="SequenceFlow_0plsyem">
+        <di:waypoint xsi:type="dc:Point" x="308" y="272" />
+        <di:waypoint xsi:type="dc:Point" x="350" y="272" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="329" y="257" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ehubc1_di" bpmnElement="SequenceFlow_1ehubc1">
+        <di:waypoint xsi:type="dc:Point" x="450" y="272" />
+        <di:waypoint xsi:type="dc:Point" x="490" y="272" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="470" y="257" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0c2rb9i_di" bpmnElement="ExclusiveGateway_0c2rb9i" isMarkerVisible="true">
+        <dc:Bounds x="631" y="247" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="626" y="209" width="60" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1gcg0ev_di" bpmnElement="SequenceFlow_1gcg0ev">
+        <di:waypoint xsi:type="dc:Point" x="590" y="272" />
+        <di:waypoint xsi:type="dc:Point" x="631" y="272" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="611" y="257" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0cnxkmo_di" bpmnElement="SequenceFlow_0cnxkmo">
+        <di:waypoint xsi:type="dc:Point" x="681" y="272" />
+        <di:waypoint xsi:type="dc:Point" x="708" y="272" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="686" y="247" width="15" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0augiow_di" bpmnElement="SequenceFlow_0augiow">
+        <di:waypoint xsi:type="dc:Point" x="808" y="272" />
+        <di:waypoint xsi:type="dc:Point" x="1162" y="272" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="987" y="257" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_0nzmwvt_di" bpmnElement="music-subscription-activated">
+        <dc:Bounds x="1294" y="254" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1281" y="290" width="62" height="37" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1jt3t2j_di" bpmnElement="SequenceFlow_1jt3t2j">
+        <di:waypoint xsi:type="dc:Point" x="1262" y="272" />
+        <di:waypoint xsi:type="dc:Point" x="1294" y="272" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1278" y="257" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1sgle8r_di" bpmnElement="SequenceFlow_1sgle8r">
+        <di:waypoint xsi:type="dc:Point" x="656" y="297" />
+        <di:waypoint xsi:type="dc:Point" x="656" y="389" />
+        <di:waypoint xsi:type="dc:Point" x="708" y="389" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="662" y="314.99998764302063" width="17" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="BoundaryEvent_1a2wh7u_di" bpmnElement="BoundaryEvent_039x7ub">
+        <dc:Bounds x="790" y="371" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="814" y="343" width="59" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_18lpv4q_di" bpmnElement="SequenceFlow_18lpv4q">
+        <di:waypoint xsi:type="dc:Point" x="1059" y="429" />
+        <di:waypoint xsi:type="dc:Point" x="1059" y="471" />
+        <di:waypoint xsi:type="dc:Point" x="758" y="471" />
+        <di:waypoint xsi:type="dc:Point" x="758" y="430" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="917" y="456" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="BoundaryEvent_0djbiwe_di" bpmnElement="BoundaryEvent_04hmzyq">
+        <dc:Bounds x="1091" y="371" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1118" y="344" width="36" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1cez2nm_di" bpmnElement="EndEvent_1cez2nm">
+        <dc:Bounds x="1194" y="371" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1171" y="407" width="81" height="37" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1lmu06n_di" bpmnElement="SequenceFlow_1lmu06n">
+        <di:waypoint xsi:type="dc:Point" x="1127" y="389" />
+        <di:waypoint xsi:type="dc:Point" x="1194" y="389" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1167" y="374" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="StartEvent_14ph1b1_di" bpmnElement="music-subscription-requested">
+        <dc:Bounds x="272" y="254" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="259" y="290" width="62" height="37" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="MessageFlow_1g5vl4b_di" bpmnElement="MessageFlow_1g5vl4b">
+        <di:waypoint xsi:type="dc:Point" x="292" y="96" />
+        <di:waypoint xsi:type="dc:Point" x="290" y="254" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="292" y="160" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_1nmvwmg_di" bpmnElement="MessageFlow_1nmvwmg">
+        <di:waypoint xsi:type="dc:Point" x="1212" y="232" />
+        <di:waypoint xsi:type="dc:Point" x="1212" y="96" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1227" y="164" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_1ik2fhk_di" bpmnElement="MessageFlow_1ik2fhk">
+        <di:waypoint xsi:type="dc:Point" x="1059" y="96" />
+        <di:waypoint xsi:type="dc:Point" x="1059" y="349" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1074" y="223" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="SendTask_1saw20q_di" bpmnElement="Task_1abqvvf">
+        <dc:Bounds x="1162" y="232" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1mpjzqb_di" bpmnElement="load-customer-data">
+        <dc:Bounds x="350" y="232" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BusinessRuleTask_1a1m8b2_di" bpmnElement="Task_1ek9w20">
+        <dc:Bounds x="490" y="232" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1f6sb44_di" bpmnElement="Task_1x02auz">
+        <dc:Bounds x="708" y="232" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1ovtrfe_di" bpmnElement="collect-prepayment">
+        <dc:Bounds x="708" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_10kucng_di" bpmnElement="provide-payment-data">
+        <dc:Bounds x="1009" y="349" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1d4ygja_di" bpmnElement="SequenceFlow_1d4ygja">
+        <di:waypoint xsi:type="dc:Point" x="758" y="350" />
+        <di:waypoint xsi:type="dc:Point" x="758" y="312" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="773" y="321" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="SendTask_029u5xf_di" bpmnElement="SendTask_029u5xf">
+        <dc:Bounds x="887" y="349" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_146of96_di" bpmnElement="SequenceFlow_146of96">
+        <di:waypoint xsi:type="dc:Point" x="826" y="389" />
+        <di:waypoint xsi:type="dc:Point" x="887" y="389" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="858" y="374" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1a8ci3a_di" bpmnElement="SequenceFlow_1a8ci3a">
+        <di:waypoint xsi:type="dc:Point" x="987" y="389" />
+        <di:waypoint xsi:type="dc:Point" x="1009" y="389" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1003" y="374" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_1ntts8v_di" bpmnElement="MessageFlow_1ntts8v">
+        <di:waypoint xsi:type="dc:Point" x="937" y="349" />
+        <di:waypoint xsi:type="dc:Point" x="937" y="96" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="952" y="223" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
